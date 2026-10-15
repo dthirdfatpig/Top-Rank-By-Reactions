@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # name: Top-Rank-By-Reactions
 # about: Bumps the most reacted posts (likes and all official Discourse reactions) to the top under the original post in Discourse topics.
-# version: 0.0.3
+# version: 0.0.4
 # authors: Discourse Team
 # url: https://github.com/dthirdfatpig/Top-Rank-By-Reactions
 # required_version: 2.7.0

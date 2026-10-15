@@ -1,6 +1,6 @@
 # Top-Rank-By-Reactions
 
-**Version:** 0.0.3
+**Version:** 0.0.4
 
 A Discourse plugin that bumps the most reacted posts in regular topics directly to the top of the post stream beneath the original post (Post #1).
 
