@@ -1,0 +1,27 @@
+plugins:
+  top_rank_by_reactions_enabled:
+    default: false
+    client: true
+    description: "Enable the Top-Rank-By-Reactions plugin to feature top reacted posts under the original post."
+
+  top_rank_by_reactions_min_reactions:
+    default: 1
+    type: integer
+    min: 1
+    client: true
+    description: "Minimum amount of reactions (any reaction: heart, like, or emoji configured in Discourse reactions) for a post to be featured at the top."
+
+  top_rank_by_reactions_min_posts:
+    default: 5
+    type: integer
+    min: 2
+    client: true
+    description: "Minimum amount of posts in a topic before ranking by reactions starts."
+
+  top_rank_by_reactions_max_posts:
+    default: 1
+    type: integer
+    min: 1
+    max: 5
+    client: true
+    description: "Maximum number of posts to go to the top (from 1 to 5), ranked by number of reactions."

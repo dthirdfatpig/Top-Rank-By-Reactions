@@ -1,0 +1,12 @@
+en:
+  js:
+    top_rank_by_reactions:
+      title_single: "Top Reacted Reply"
+      title_multiple: "Top Reacted Replies"
+      rank: "#%{rank} Top Reacted"
+      reactions_count:
+        one: "%{count} reaction"
+        other: "%{count} reactions"
+      jump_to_post: "Jump to post #%{post_number}"
+      show_full_post: "Show full post"
+      show_less: "Show less"

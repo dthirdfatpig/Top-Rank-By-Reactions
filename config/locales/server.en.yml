@@ -1,0 +1,6 @@
+en:
+  site_settings:
+    top_rank_by_reactions_enabled: "Enable 'Top-Rank-By-Reactions' plugin."
+    top_rank_by_reactions_min_reactions: "Minimum amount of reactions (any reaction: likes or emojis set in Discourse reactions) for a post to go to the top under the original post."
+    top_rank_by_reactions_min_posts: "Minimum amount of posts in a topic before ranking by reactions starts."
+    top_rank_by_reactions_max_posts: "Maximum number of posts to go to the top (from 1 to 5), ranked by number of reactions (more reactions upper)."
