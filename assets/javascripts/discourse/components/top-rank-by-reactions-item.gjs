@@ -45,19 +45,12 @@ export default class TopRankByReactionsItem extends Component {
 
   get avatarUrl() {
     const template = this.post.user?.avatar_template;
-    if (!template) {
-      return "";
-    }
-    return template.replace("{size}", "48");
+    return template ? template.replace("{size}", "48") : "";
   }
 
   get formattedDate() {
-    if (!this.post.created_at) {
-      return "";
-    }
     try {
-      const date = new Date(this.post.created_at);
-      return date.toLocaleDateString(undefined, {
+      return new Date(this.post.created_at).toLocaleDateString(undefined, {
         month: "short",
         day: "numeric",
         year: "numeric",
@@ -67,6 +60,7 @@ export default class TopRankByReactionsItem extends Component {
     }
   }
 
+  // Show toggle only when full cooked content is significantly longer than the excerpt
   get hasLongContent() {
     return (
       this.post.cooked &&
@@ -89,9 +83,7 @@ export default class TopRankByReactionsItem extends Component {
 
   @action
   jumpToPost(event) {
-    const postElem = document.getElementById(
-      `post_${this.post.post_number}`
-    );
+    const postElem = document.getElementById(`post_${this.post.post_number}`);
     if (postElem) {
       event.preventDefault();
       postElem.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -103,6 +95,7 @@ export default class TopRankByReactionsItem extends Component {
       class="top-rank-by-reactions-item {{this.rankClass}}"
       data-post-number={{this.post.post_number}}
     >
+      {{!-- Header: rank badge + author + reaction count --}}
       <div class="top-rank-item-header">
         <div class="top-rank-badge-and-user">
           <span class="top-rank-badge">
@@ -124,24 +117,21 @@ export default class TopRankByReactionsItem extends Component {
                 />
               {{/if}}
               <span class="top-rank-username">{{this.post.user.name}}</span>
-              {{#if (and this.post.user.name (not-eq this.post.user.name this.post.user.username))}}
-                <span class="top-rank-user-handle">@{{this.post.user.username}}</span>
-              {{/if}}
             </div>
           {{/if}}
         </div>
 
         <div class="top-rank-meta-actions">
           <span class="top-rank-reactions-pill" title={{this.reactionsLabel}}>
-            <span class="top-rank-reactions-count">{{this.reactionsLabel}}</span>
+            {{this.reactionsLabel}}
           </span>
-
           {{#if this.formattedDate}}
             <span class="top-rank-date">{{this.formattedDate}}</span>
           {{/if}}
         </div>
       </div>
 
+      {{!-- Reaction emoji breakdown pills --}}
       {{#if this.post.reactions.length}}
         <div class="top-rank-reactions-breakdown">
           {{#each this.post.reactions as |reaction|}}
@@ -151,8 +141,8 @@ export default class TopRankByReactionsItem extends Component {
                   src={{reaction.emoji_url}}
                   alt={{reaction.emoji}}
                   class="emoji reaction-emoji-img"
-                  width="16"
-                  height="16"
+                  width="18"
+                  height="18"
                 />
               {{else}}
                 <span class="reaction-emoji-text">:{{reaction.emoji}}:</span>
@@ -163,6 +153,7 @@ export default class TopRankByReactionsItem extends Component {
         </div>
       {{/if}}
 
+      {{!-- Post content excerpt (expandable) --}}
       <div class="top-rank-item-body">
         <blockquote class="top-rank-item-content">
           {{this.renderedContent}}
@@ -185,6 +176,7 @@ export default class TopRankByReactionsItem extends Component {
         {{/if}}
       </div>
 
+      {{!-- Footer: jump to post button --}}
       <div class="top-rank-item-footer">
         <a
           href={{this.post.url}}

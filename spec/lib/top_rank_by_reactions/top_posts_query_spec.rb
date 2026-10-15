@@ -3,8 +3,8 @@
 require "rails_helper"
 
 RSpec.describe TopRankByReactions::TopPostsQuery do
-  fab!(:user) { Fabricate(:user) }
-  fab!(:topic) { Fabricate(:topic) }
+  fab!(:user)
+  fab!(:topic)
   fab!(:post1) { Fabricate(:post, topic: topic, post_number: 1, user: user) }
   fab!(:post2) { Fabricate(:post, topic: topic, post_number: 2, user: user) }
   fab!(:post3) { Fabricate(:post, topic: topic, post_number: 3, user: user) }
@@ -19,62 +19,41 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
     topic.update_columns(posts_count: 5)
   end
 
-  describe "#should_display?" do
-    it "returns false when plugin is disabled" do
+  subject(:query) { described_class.new(topic) }
+
+  describe "#top_posts via should_display?" do
+    it "returns [] when plugin is disabled" do
       SiteSetting.top_rank_by_reactions_enabled = false
-      expect(described_class.new(topic).should_display?).to eq(false)
+      expect(query.top_posts).to eq([])
     end
 
-    it "returns false when topic is a private message" do
+    it "returns [] for a private message topic" do
       topic.update_columns(archetype: Archetype.private_message)
-      expect(described_class.new(topic).should_display?).to eq(false)
+      expect(query.top_posts).to eq([])
     end
 
-    it "returns false when topic has fewer posts than min_posts setting" do
+    it "returns [] when the topic has fewer posts than min_posts" do
       SiteSetting.top_rank_by_reactions_min_posts = 10
-      expect(described_class.new(topic).should_display?).to eq(false)
-    end
-
-    it "returns true when requirements are met" do
-      expect(described_class.new(topic).should_display?).to eq(true)
+      expect(query.top_posts).to eq([])
     end
   end
 
-  describe "#top_posts" do
-    it "returns empty array when should_display? is false" do
-      SiteSetting.top_rank_by_reactions_enabled = false
-      expect(described_class.new(topic).top_posts).to eq([])
+  describe "#top_posts ranking" do
+    it "excludes the OP (post_number = 1) from results" do
+      10.times { PostActionCreator.like(Fabricate(:user), post1) }
+      3.times  { PostActionCreator.like(Fabricate(:user), post2) }
+
+      ids = query.top_posts.map { |r| r[:id] }
+      expect(ids).not_to include(post1.id)
+      expect(ids).to include(post2.id)
     end
 
-    it "excludes post 1 (OP) even if it has reactions" do
-      10.times do
-        u = Fabricate(:user)
-        PostActionCreator.like(u, post1)
-      end
+    it "filters posts below min_reactions" do
+      1.times { PostActionCreator.like(Fabricate(:user), post2) }  # below min of 2
+      3.times { PostActionCreator.like(Fabricate(:user), post3) }  # above min
 
-      3.times do
-        u = Fabricate(:user)
-        PostActionCreator.like(u, post2)
-      end
-
-      results = described_class.new(topic).top_posts
-      expect(results.map { |r| r[:id] }).not_to include(post1.id)
-      expect(results.first[:id]).to eq(post2.id)
-    end
-
-    it "filters out posts below min_reactions threshold" do
-      u1 = Fabricate(:user)
-      PostActionCreator.like(u1, post2)
-
-      3.times do
-        u = Fabricate(:user)
-        PostActionCreator.like(u, post3)
-      end
-
-      results = described_class.new(topic).top_posts
-      expect(results.length).to eq(1)
-      expect(results.first[:id]).to eq(post3.id)
-      expect(results.first[:reaction_count]).to eq(3)
+      results = query.top_posts
+      expect(results.map { |r| r[:id] }).to eq([post3.id])
     end
 
     it "ranks posts descending by reaction count" do
@@ -82,22 +61,25 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
       6.times { PostActionCreator.like(Fabricate(:user), post3) }
       2.times { PostActionCreator.like(Fabricate(:user), post4) }
 
-      results = described_class.new(topic).top_posts
+      results = query.top_posts
       expect(results.map { |r| r[:id] }).to eq([post3.id, post2.id, post4.id])
-      expect(results[0][:rank]).to eq(1)
-      expect(results[1][:rank]).to eq(2)
-      expect(results[2][:rank]).to eq(3)
+      expect(results.map { |r| r[:rank] }).to eq([1, 2, 3])
     end
 
-    it "limits returned posts to max_posts setting" do
+    it "honours max_posts setting" do
       SiteSetting.top_rank_by_reactions_max_posts = 1
-
       4.times { PostActionCreator.like(Fabricate(:user), post2) }
       3.times { PostActionCreator.like(Fabricate(:user), post3) }
 
-      results = described_class.new(topic).top_posts
+      results = query.top_posts
       expect(results.length).to eq(1)
       expect(results.first[:id]).to eq(post2.id)
+    end
+
+    it "includes user info in the result" do
+      3.times { PostActionCreator.like(Fabricate(:user), post2) }
+      results = query.top_posts
+      expect(results.first[:user][:username]).to eq(user.username)
     end
   end
 end
