@@ -3,8 +3,8 @@
 require "rails_helper"
 
 RSpec.describe TopRankByReactions::TopPostsQuery do
-  fab!(:user)
-  fab!(:topic)
+  fab!(:user) { Fabricate(:user) }
+  fab!(:topic) { Fabricate(:topic) }
   fab!(:post1) { Fabricate(:post, topic: topic, post_number: 1, user: user) }
   fab!(:post2) { Fabricate(:post, topic: topic, post_number: 2, user: user) }
   fab!(:post3) { Fabricate(:post, topic: topic, post_number: 3, user: user) }
@@ -21,39 +21,39 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
 
   subject(:query) { described_class.new(topic) }
 
-  describe "#top_posts via should_display?" do
-    it "returns [] when plugin is disabled" do
+  describe "#should_display?" do
+    it "returns false when plugin is disabled" do
       SiteSetting.top_rank_by_reactions_enabled = false
-      expect(query.top_posts).to eq([])
+      expect(query.should_display?).to eq(false)
     end
 
-    it "returns [] for a private message topic" do
+    it "returns false for a private message topic" do
       topic.update_columns(archetype: Archetype.private_message)
-      expect(query.top_posts).to eq([])
+      expect(query.should_display?).to eq(false)
     end
 
-    it "returns [] when the topic has fewer posts than min_posts" do
+    it "returns false when the topic has fewer posts than min_posts" do
       SiteSetting.top_rank_by_reactions_min_posts = 10
-      expect(query.top_posts).to eq([])
+      expect(query.should_display?).to eq(false)
     end
   end
 
-  describe "#top_posts ranking" do
-    it "excludes the OP (post_number = 1) from results" do
+  describe "#top_post_ids" do
+    it "excludes the OP (post_number = 1) from bumped results" do
       10.times { PostActionCreator.like(Fabricate(:user), post1) }
       3.times  { PostActionCreator.like(Fabricate(:user), post2) }
 
-      ids = query.top_posts.map { |r| r[:id] }
+      ids = query.top_post_ids
       expect(ids).not_to include(post1.id)
       expect(ids).to include(post2.id)
     end
 
     it "filters posts below min_reactions" do
       1.times { PostActionCreator.like(Fabricate(:user), post2) }  # below min of 2
-      3.times { PostActionCreator.like(Fabricate(:user), post3) }  # above min
+      3.times { PostActionCreator.like(Fabricate(:user), post3) }  # above min of 2
 
-      results = query.top_posts
-      expect(results.map { |r| r[:id] }).to eq([post3.id])
+      ids = query.top_post_ids
+      expect(ids).to eq([post3.id])
     end
 
     it "ranks posts descending by reaction count" do
@@ -61,9 +61,8 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
       6.times { PostActionCreator.like(Fabricate(:user), post3) }
       2.times { PostActionCreator.like(Fabricate(:user), post4) }
 
-      results = query.top_posts
-      expect(results.map { |r| r[:id] }).to eq([post3.id, post2.id, post4.id])
-      expect(results.map { |r| r[:rank] }).to eq([1, 2, 3])
+      ids = query.top_post_ids
+      expect(ids).to eq([post3.id, post2.id, post4.id])
     end
 
     it "honours max_posts setting" do
@@ -71,15 +70,21 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
       4.times { PostActionCreator.like(Fabricate(:user), post2) }
       3.times { PostActionCreator.like(Fabricate(:user), post3) }
 
-      results = query.top_posts
-      expect(results.length).to eq(1)
-      expect(results.first[:id]).to eq(post2.id)
+      ids = query.top_post_ids
+      expect(ids.length).to eq(1)
+      expect(ids.first).to eq(post2.id)
     end
+  end
 
-    it "includes user info in the result" do
-      3.times { PostActionCreator.like(Fabricate(:user), post2) }
-      results = query.top_posts
-      expect(results.first[:user][:username]).to eq(user.username)
+  describe "TopRankByReactions.order_sql_for_topic" do
+    it "constructs a valid CASE order SQL string" do
+      3.times { PostActionCreator.like(Fabricate(:user), post3) }
+      2.times { PostActionCreator.like(Fabricate(:user), post2) }
+
+      sql = TopRankByReactions.order_sql_for_topic(topic)
+      expect(sql).to include("CASE posts.post_number WHEN 1 THEN 0")
+      expect(sql).to include("WHEN #{post3.id} THEN 1")
+      expect(sql).to include("WHEN #{post2.id} THEN 2")
     end
   end
 end

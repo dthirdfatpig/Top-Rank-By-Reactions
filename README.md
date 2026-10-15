@@ -1,20 +1,30 @@
 # Top-Rank-By-Reactions
 
-**Version:** 0.0.2
+**Version:** 0.0.3
 
-A Discourse plugin that highlights and ranks the most reacted posts in a topic directly beneath the original post (Post #1).
+A Discourse plugin that bumps the most reacted posts in regular topics directly to the top of the post stream beneath the original post (Post #1).
 
 ---
 
-## Universal Reaction Support
+## How It Works
 
-This plugin integrates directly with Discourse's official reactions system ([`discourse-reactions`](https://meta.discourse.org/t/discourse-reactions/183261)):
+Instead of creating a summary box or requiring a special topic type (like Q&A/voting plugins do), **Top-Rank-By-Reactions works automatically on regular topics**:
 
-- **Any reaction set in "Discourse reactions enabled reactions"** (`discourse_reactions_enabled_reactions`) works with this plugin to rank and bump posts.
-- Whether users react with hearts, thumbs up (`+1`), smiles, applause, or any custom emojis you have configured on your forum, they all count towards the post's reaction total.
+1. **Post #1 (Original Post)** remains at the very top of the topic.
+2. **Top Reacted Replies** (up to your configured limit) are bumped up in the post stream directly under Post #1, ranked by reaction count (highest first).
+3. **All other replies** follow below in their regular chronological order.
+4. Each bumped post displays a **`🏆 #N Top Reacted Reply`** badge above its content.
+
+---
+
+## Universal Discourse Reactions Support
+
+This plugin integrates directly with the official [`discourse-reactions`](https://meta.discourse.org/t/discourse-reactions/183261) plugin:
+
+- **Any reaction set in "Discourse reactions enabled reactions"** (`discourse_reactions_enabled_reactions`) works with this plugin to bump posts.
+- Whether users react with hearts, thumbs up (`+1`), smiles, applause, or custom emojis, they all count towards the post's total.
 - Also supports core Discourse likes.
-- **Smart Deduplication**: Counts distinct reacting users across both likes and reaction emojis so reactions are accurately tallied without duplicate counts.
-- **Real Emoji Rendering**: Renders the authentic Discourse emoji images for all configured reactions in the breakdown display.
+- **Deduplication**: Counts unique reacting users across likes and emoji reactions so reactions are accurately tallied.
 
 ---
 
@@ -25,9 +35,9 @@ Configure the plugin in Discourse Admin under **Settings &rarr; Plugins &rarr; `
 | Setting | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `top_rank_by_reactions_enabled` | Boolean | `false` | Enable or disable the plugin. |
-| `top_rank_by_reactions_min_reactions` | Integer | `1` | Minimum number of reactions required for a post to go to the top under the original post. |
+| `top_rank_by_reactions_min_reactions` | Integer | `1` | Minimum number of reactions required for a post to be bumped to the top under Post #1. |
 | `top_rank_by_reactions_min_posts` | Integer | `5` | Minimum number of posts in a topic before ranking starts. |
-| `top_rank_by_reactions_max_posts` | Integer (1–5) | `1` | Maximum number of posts to feature at the top (from 1 to 5), ranked by number of reactions (more reactions upper). |
+| `top_rank_by_reactions_max_posts` | Integer (1–5) | `1` | Maximum number of posts to bump to the top (from 1 to 5), ranked by number of reactions (more reactions upper). |
 
 ---
 
@@ -52,8 +62,8 @@ cd /var/discourse
 ```
 
 After the rebuild finishes:
-1. Go to **Discourse Admin &rarr; Plugins** (it will appear as `Top-Rank-By-Reactions`).
-2. Go to **Settings &rarr; Plugins &rarr; `top_rank_by_reactions`** and check `top_rank_by_reactions_enabled`.
+1. Go to **Discourse Admin &rarr; Settings &rarr; Plugins &rarr; `top_rank_by_reactions`**.
+2. Check `top_rank_by_reactions_enabled` and configure your thresholds.
 
 ---
 
