@@ -74,6 +74,14 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
       expect(ids.length).to eq(1)
       expect(ids.first).to eq(post2.id)
     end
+
+    it "excludes hidden or flagged posts" do
+      5.times { PostActionCreator.like(Fabricate(:user), post2) }
+      post2.update_columns(hidden: true)
+
+      ids = query.top_post_ids
+      expect(ids).not_to include(post2.id)
+    end
   end
 
   describe "#top_posts_data" do
@@ -90,6 +98,14 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
       expect(data.second[:id]).to eq(post2.id)
       expect(data.second[:rank]).to eq(2)
       expect(data.second[:reaction_count]).to eq(3)
+    end
+
+    it "excludes hidden posts from structured data" do
+      5.times { PostActionCreator.like(Fabricate(:user), post3) }
+      post3.update_columns(hidden: true)
+
+      data = query.top_posts_data
+      expect(data.map { |d| d[:id] }).not_to include(post3.id)
     end
   end
 

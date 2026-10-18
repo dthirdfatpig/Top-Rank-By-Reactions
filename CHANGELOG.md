@@ -2,6 +2,16 @@
 
 All notable changes to the **Top-Rank-By-Reactions** Discourse plugin will be documented in this file.
 
+## [0.0.7] - 2026-10-18
+
+### Security & Hardening
+- **Hidden & Flagged Post Exclusion**: Explicitly excluded hidden/flagged posts (`hidden = false`) from reaction counts and featured selections, preventing flagged or reported posts from appearing at the top.
+- **Guardian Permission Scoping**: Integrated Discourse `Guardian` checks into query and serializer layers. Caches are partitioned per user session ID (`guardian.user.id`) to guarantee that permission-restricted topics or posts are never visible to unauthorized or anonymous users.
+- **Avatar Fallbacks**: Added Discourse system user fallbacks for missing, deleted, or anonymous user avatars.
+- **Zero Information Leakage Verified**: Confirmed that serialized payloads only contain standard public post attributes (no emails, IPs, private tokens, or unapproved fields).
+
+---
+
 ## [0.0.6] - 2026-10-18
 
 ### Fixed

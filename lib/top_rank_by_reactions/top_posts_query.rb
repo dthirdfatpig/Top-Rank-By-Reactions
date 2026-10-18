@@ -35,14 +35,19 @@ module TopRankByReactions
 
       eligible_ids = eligible.map(&:first)
 
-      valid_ids = Post
-                    .where(id: eligible_ids)
-                    .where(topic_id: @topic.id)
-                    .where(deleted_at: nil)
-                    .where(post_type: Post.types[:regular])
-                    .where("post_number > 1")
-                    .pluck(:id)
+      posts = Post
+                .where(id: eligible_ids)
+                .where(topic_id: @topic.id)
+                .where(deleted_at: nil)
+                .where(hidden: false)
+                .where(post_type: Post.types[:regular])
+                .where("post_number > 1")
 
+      if @guardian.present?
+        posts = posts.select { |p| @guardian.can_see_post?(p) }
+      end
+
+      valid_ids = posts.map(&:id)
       eligible_ids.select { |id| valid_ids.include?(id) }
     end
 
@@ -56,15 +61,18 @@ module TopRankByReactions
                 .where(id: ids)
                 .where(topic_id: @topic.id)
                 .where(deleted_at: nil)
+                .where(hidden: false)
+                .where(post_type: Post.types[:regular])
                 .index_by(&:id)
 
       ids.each_with_index.map do |id, idx|
         post = posts[id]
         next unless post
+        next if @guardian.present? && !@guardian.can_see_post?(post)
 
         user = post.user
-        avatar_template = user&.avatar_template.to_s
-        avatar_url = avatar_template.gsub("{size}", "72")
+        avatar_template = user&.avatar_template.presence || Discourse.system_user.avatar_template
+        avatar_url = avatar_template.to_s.gsub("{size}", "72")
 
         username = user&.username || "anonymous"
         name = user&.name.presence || username
@@ -91,6 +99,7 @@ module TopRankByReactions
       SiteSetting.top_rank_by_reactions_enabled &&
         @topic.present? &&
         !@topic.private_message? &&
+        (@guardian.blank? || @guardian.can_see_topic?(@topic)) &&
         @topic.posts_count.to_i >= SiteSetting.top_rank_by_reactions_min_posts.to_i
     end
 
@@ -124,6 +133,7 @@ module TopRankByReactions
             WHERE p.topic_id = :topic_id
               AND p.post_number > 1
               AND p.deleted_at IS NULL
+              AND p.hidden = false
               AND p.post_type = :regular
               AND pa.post_action_type_id = :like_type_id
               AND pa.deleted_at IS NULL
@@ -137,6 +147,7 @@ module TopRankByReactions
             WHERE p.topic_id = :topic_id
               AND p.post_number > 1
               AND p.deleted_at IS NULL
+              AND p.hidden = false
               AND p.post_type = :regular
         SQL
 
@@ -165,6 +176,7 @@ module TopRankByReactions
           WHERE p.topic_id = :topic_id
             AND p.post_number > 1
             AND p.deleted_at IS NULL
+            AND p.hidden = false
             AND p.post_type = :regular
             AND pa.post_action_type_id = :like_type_id
             AND pa.deleted_at IS NULL
