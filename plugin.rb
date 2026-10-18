@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # name: Top-Rank-By-Reactions
-# about: Bumps the most reacted posts (likes and all official Discourse reactions) to the top under the original post in Discourse topics.
-# version: 0.0.4
+# about: Features the most reacted posts under the original post while preserving natural chronological timeline in Discourse topics.
+# version: 0.0.5
 # authors: Discourse Team
 # url: https://github.com/dthirdfatpig/Top-Rank-By-Reactions
 # required_version: 2.7.0
@@ -11,8 +11,28 @@ enabled_site_setting :top_rank_by_reactions_enabled
 register_asset "stylesheets/common/top-rank-by-reactions.scss"
 
 register_svg_icon "trophy"
+register_svg_icon "arrow-down"
 
 after_initialize do
+  # Fix for uppercase plugin names and strict stylesheet MIME checking in modern browsers (MS Edge / Chrome / Safari).
+  # Discourse core routes /stylesheets/:name with constraint /[-a-z0-9_]+/, which 404s and returns text/html
+  # when the plugin directory or name contains uppercase letters.
+  Discourse::Application.routes.prepend do
+    get "stylesheets/:name" => "stylesheets#show_source_map",
+      constraints: {
+        name: /[-a-zA-Z0-9_]+/,
+        format: /css\.map/,
+      },
+      format: true
+
+    get "stylesheets/:name" => "stylesheets#show",
+      constraints: {
+        name: /[-a-zA-Z0-9_]+/,
+        format: "css",
+      },
+      format: true
+  end
+
   module ::TopRankByReactions
     PLUGIN_NAME = "Top-Rank-By-Reactions"
 
@@ -37,6 +57,27 @@ after_initialize do
       ids
     end
 
+    def self.top_ranked_posts(topic)
+      return [] unless should_rank_topic?(topic)
+
+      cache_key = :@top_ranked_posts_data
+      if topic.instance_variable_defined?(cache_key)
+        return topic.instance_variable_get(cache_key)
+      end
+
+      data = TopPostsQuery.new(topic).top_posts_data
+      topic.instance_variable_set(cache_key, data)
+      data
+    end
+
+    def self.top_reaction_rank_for(topic, post_id)
+      return nil unless should_rank_topic?(topic)
+
+      ids = top_reaction_post_ids(topic)
+      idx = ids.index(post_id)
+      idx ? idx + 1 : nil
+    end
+
     def self.order_sql_for_topic(topic)
       ids = top_reaction_post_ids(topic)
       return nil if ids.blank?
@@ -49,32 +90,36 @@ after_initialize do
   require_relative "lib/top_rank_by_reactions/top_posts_query"
   require_relative "lib/top_rank_by_reactions/topic_view_extension"
 
-  # Apply custom default scope to reorder posts in the topic stream
-  # Keeps post #1 at the top, followed by the top reacted replies, followed by remaining posts
-  TopicView.apply_custom_default_scope do |scope, topic_view|
-    if TopRankByReactions.should_rank_topic?(topic_view.topic) &&
-         !topic_view.instance_variable_get(:@replies_to_post_number) &&
-         !topic_view.instance_variable_get(:@post_ids)
-
-      order_sql = TopRankByReactions.order_sql_for_topic(topic_view.topic)
-      if order_sql.present?
-        scope = scope.unscope(:order).order(Arel.sql(order_sql))
-      end
-    end
-    scope
-  end
-
-  # Prepend TopicViewExtension to handle stream pagination and windowing for reordered posts
+  # Prepend TopicViewExtension to topic view
   reloadable_patch do
     ::TopicView.prepend(TopRankByReactions::TopicViewExtension)
   end
 
-  # Add top_reaction_rank to PostSerializer so the frontend can identify bumped posts
+  # Add top_ranked_posts to TopicViewSerializer for topic-level access
+  add_to_serializer(:topic_view, :top_ranked_posts, false) do
+    TopRankByReactions.top_ranked_posts(object.topic)
+  end
+
+  add_to_serializer(:topic_view, :include_top_ranked_posts?) do
+    TopRankByReactions.should_rank_topic?(object.topic)
+  end
+
+  # Also add top_ranked_posts directly to PostSerializer on post #1
+  add_to_serializer(:post, :top_ranked_posts, false) do
+    TopRankByReactions.top_ranked_posts(topic)
+  end
+
+  add_to_serializer(:post, :include_top_ranked_posts?) do
+    object.post_number == 1 && TopRankByReactions.should_rank_topic?(topic)
+  end
+
+  # Add top_reaction_rank to PostSerializer so stream posts can display their rank badge
   add_to_serializer(:post, :top_reaction_rank, false) do
-    topic_view&.top_reaction_rank_for(object.id)
+    topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(topic, object.id)
   end
 
   add_to_serializer(:post, :include_top_reaction_rank?) do
-    topic_view.present? && topic_view.respond_to?(:top_reaction_rank_for) && topic_view.top_reaction_rank_for(object.id).present?
+    rank = topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(topic, object.id)
+    rank.present? && rank > 0
   end
 end

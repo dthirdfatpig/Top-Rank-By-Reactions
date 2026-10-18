@@ -76,6 +76,23 @@ RSpec.describe TopRankByReactions::TopPostsQuery do
     end
   end
 
+  describe "#top_posts_data" do
+    it "returns structured post details including rank, reaction_count, and author" do
+      5.times { PostActionCreator.like(Fabricate(:user), post3) }
+      3.times { PostActionCreator.like(Fabricate(:user), post2) }
+
+      data = query.top_posts_data
+      expect(data.length).to eq(2)
+      expect(data.first[:id]).to eq(post3.id)
+      expect(data.first[:rank]).to eq(1)
+      expect(data.first[:reaction_count]).to eq(5)
+      expect(data.first[:user][:username]).to eq(user.username)
+      expect(data.second[:id]).to eq(post2.id)
+      expect(data.second[:rank]).to eq(2)
+      expect(data.second[:reaction_count]).to eq(3)
+    end
+  end
+
   describe "TopRankByReactions.order_sql_for_topic" do
     it "constructs a valid CASE order SQL string" do
       3.times { PostActionCreator.like(Fabricate(:user), post3) }

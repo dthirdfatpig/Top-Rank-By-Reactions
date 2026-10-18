@@ -1,19 +1,20 @@
 # Top-Rank-By-Reactions
 
-**Version:** 0.0.4
+**Version:** 0.0.5  
+**Changelog:** [CHANGELOG.md](CHANGELOG.md)
 
-A Discourse plugin that bumps the most reacted posts in regular topics directly to the top of the post stream beneath the original post (Post #1).
+A Discourse plugin that features the most reacted replies in regular topics directly beneath the original post (Post #1), while preserving the original chronological timeline and context across the entire topic stream.
 
 ---
 
 ## How It Works
 
-Instead of creating a summary box or requiring a special topic type (like Q&A/voting plugins do), **Top-Rank-By-Reactions works automatically on regular topics**:
+Instead of altering the topic's natural chronological conversation stream, **Top-Rank-By-Reactions provides the best of both worlds**:
 
-1. **Post #1 (Original Post)** remains at the very top of the topic.
-2. **Top Reacted Replies** (up to your configured limit) are bumped up in the post stream directly under Post #1, ranked by reaction count (highest first).
-3. **All other replies** follow below in their regular chronological order.
-4. Each bumped post displays a **`🏆 #N Top Reacted Reply`** badge above its content.
+1. **Featured at the Top**: Directly under Post #1 (the original post), a dedicated section highlights the top-reacted replies (up to your configured limit), ranked by total reactions (highest first).
+2. **Preserved in the Timeline**: Each featured reply **also remains in its original chronological position** in the stream. Quotes, replies, and conversation context stay 100% natural when reading the topic from start to finish.
+3. **Trophy Badge Beside Username**: Every ranked post displays a sleek **`🏆 #N Top Reacted`** badge right next to the author's username in the post header.
+4. **Quick Jump Button**: Clicking the jump button on any featured reply smoothly scrolls down to that exact post in the conversation timeline with a brief highlight.
 
 ---
 
@@ -35,9 +36,9 @@ Configure the plugin in Discourse Admin under **Settings &rarr; Plugins &rarr; `
 | Setting | Type | Default | Description |
 | :--- | :--- | :--- | :--- |
 | `top_rank_by_reactions_enabled` | Boolean | `false` | Enable or disable the plugin. |
-| `top_rank_by_reactions_min_reactions` | Integer | `1` | Minimum number of reactions required for a post to be bumped to the top under Post #1. |
+| `top_rank_by_reactions_min_reactions` | Integer | `1` | Minimum number of reactions required for a post to be featured at the top under Post #1. |
 | `top_rank_by_reactions_min_posts` | Integer | `5` | Minimum number of posts in a topic before ranking starts. |
-| `top_rank_by_reactions_max_posts` | Integer (1–5) | `1` | Maximum number of posts to bump to the top (from 1 to 5), ranked by number of reactions (more reactions upper). |
+| `top_rank_by_reactions_max_posts` | Integer (1–5) | `1` | Maximum number of posts to feature at the top (from 1 to 5), ranked by number of reactions (more reactions upper). |
 
 ---
 

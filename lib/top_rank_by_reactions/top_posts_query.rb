@@ -46,6 +46,44 @@ module TopRankByReactions
       eligible_ids.select { |id| valid_ids.include?(id) }
     end
 
+    def top_posts_data
+      ids = top_post_ids
+      return [] if ids.blank?
+
+      reaction_counts = count_reactions_per_post
+      posts = Post
+                .includes(:user)
+                .where(id: ids)
+                .where(topic_id: @topic.id)
+                .where(deleted_at: nil)
+                .index_by(&:id)
+
+      ids.each_with_index.map do |id, idx|
+        post = posts[id]
+        next unless post
+
+        user = post.user
+        avatar_template = user&.avatar_template.to_s
+        avatar_url = avatar_template.gsub("{size}", "72")
+
+        {
+          id: post.id,
+          post_number: post.post_number,
+          user: {
+            id: user&.id,
+            username: user&.username,
+            name: user&.name.presence || user&.username,
+            avatar_template: avatar_template,
+            avatar_url: avatar_url,
+          },
+          cooked: post.cooked,
+          created_at: post.created_at,
+          reaction_count: reaction_counts[id].to_i,
+          rank: idx + 1,
+        }
+      end.compact
+    end
+
     def should_display?
       SiteSetting.top_rank_by_reactions_enabled &&
         @topic.present? &&

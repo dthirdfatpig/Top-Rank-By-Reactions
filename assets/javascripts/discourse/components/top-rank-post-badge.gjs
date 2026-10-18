@@ -15,18 +15,16 @@ export default class TopRankPostBadge extends Component {
     try {
       return i18n("top_rank_by_reactions.rank", { rank: this.rank });
     } catch (_) {
-      return `#${this.rank} Top Reacted Reply`;
+      return `#${this.rank} Top Reacted`;
     }
   }
 
   <template>
     {{#if this.rank}}
-      <div class="top-rank-bumped-badge-container">
-        <span class="top-rank-bumped-badge {{this.rankClass}}">
-          {{icon "trophy" class="gold-trophy"}}
-          <span class="top-rank-badge-text">{{this.rankText}}</span>
-        </span>
-      </div>
+      <span class="top-rank-poster-badge {{this.rankClass}}" title={{this.rankText}}>
+        {{icon "trophy" class="gold-trophy"}}
+        <span class="top-rank-badge-text">{{this.rankText}}</span>
+      </span>
     {{/if}}
   </template>
 }
