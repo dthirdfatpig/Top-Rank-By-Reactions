@@ -1,7 +1,7 @@
 # frozen_string_literal: true
 # name: Top-Rank-By-Reactions
 # about: Features the most reacted posts under the original post while preserving natural chronological timeline in Discourse topics.
-# version: 0.0.5
+# version: 0.0.6
 # authors: Discourse Team
 # url: https://github.com/dthirdfatpig/Top-Rank-By-Reactions
 # required_version: 2.7.0
@@ -106,20 +106,24 @@ after_initialize do
 
   # Also add top_ranked_posts directly to PostSerializer on post #1
   add_to_serializer(:post, :top_ranked_posts, false) do
-    TopRankByReactions.top_ranked_posts(topic)
+    current_topic = respond_to?(:topic) && topic ? topic : object.topic
+    TopRankByReactions.top_ranked_posts(current_topic)
   end
 
   add_to_serializer(:post, :include_top_ranked_posts?) do
-    object.post_number == 1 && TopRankByReactions.should_rank_topic?(topic)
+    current_topic = respond_to?(:topic) && topic ? topic : object.topic
+    object.post_number == 1 && TopRankByReactions.should_rank_topic?(current_topic)
   end
 
   # Add top_reaction_rank to PostSerializer so stream posts can display their rank badge
   add_to_serializer(:post, :top_reaction_rank, false) do
-    topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(topic, object.id)
+    current_topic = respond_to?(:topic) && topic ? topic : object.topic
+    topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(current_topic, object.id)
   end
 
   add_to_serializer(:post, :include_top_reaction_rank?) do
-    rank = topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(topic, object.id)
+    current_topic = respond_to?(:topic) && topic ? topic : object.topic
+    rank = topic_view&.top_reaction_rank_for(object.id) || TopRankByReactions.top_reaction_rank_for(current_topic, object.id)
     rank.present? && rank > 0
   end
 end

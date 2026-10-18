@@ -2,6 +2,14 @@
 
 All notable changes to the **Top-Rank-By-Reactions** Discourse plugin will be documented in this file.
 
+## [0.0.6] - 2026-10-18
+
+### Fixed
+- **Ember/Glimmer Runtime TypeError**: Fixed `can't access property "topicUrl", this is undefined` exception in `TopRankFeaturedReplies` component by converting template helper methods to pure module-level functions with explicitly passed parameters. This unblocks Ember's post stream rendering and ensures all replies in the topic load cleanly.
+- Added comprehensive defensive guards for topic and user attributes in serializers and templates.
+
+---
+
 ## [0.0.5] - 2026-10-18
 
 ### Added
@@ -13,7 +21,6 @@ All notable changes to the **Top-Rank-By-Reactions** Discourse plugin will be do
 ### Changed
 - Stream posts no longer require SQL reordering, ensuring native pagination, virtual scrolling, and quotes operate with 100% standard Discourse stability.
 - Refined SCSS styling with full support for both light and dark themes using Discourse CSS custom properties.
-- Bumped plugin version to `0.0.5`.
 
 ---
 

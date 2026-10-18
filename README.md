@@ -1,6 +1,6 @@
 # Top-Rank-By-Reactions
 
-**Version:** 0.0.5  
+**Version:** 0.0.6  
 **Changelog:** [CHANGELOG.md](CHANGELOG.md)
 
 A Discourse plugin that features the most reacted replies in regular topics directly beneath the original post (Post #1), while preserving the original chronological timeline and context across the entire topic stream.

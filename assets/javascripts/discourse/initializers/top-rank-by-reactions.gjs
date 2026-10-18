@@ -23,7 +23,7 @@ function initializeWithApi(api) {
       "post-meta-data-poster-name",
       class extends Component {
         static shouldRender(args) {
-          return args.post?.top_reaction_rank > 0;
+          return Boolean(args?.post?.top_reaction_rank > 0);
         }
 
         <template>
@@ -39,13 +39,13 @@ function initializeWithApi(api) {
       "post-content-cooked-html",
       class extends Component {
         static shouldRender(args) {
-          if (args.post?.post_number !== 1) {
+          if (!args?.post || args.post.post_number !== 1) {
             return false;
           }
           const items =
-            args.post?.top_ranked_posts ||
-            args.post?.topic?.top_ranked_posts;
-          return items && items.length > 0;
+            args.post.top_ranked_posts ||
+            args.post.topic?.top_ranked_posts;
+          return Boolean(items && items.length > 0);
         }
 
         <template>

@@ -66,13 +66,16 @@ module TopRankByReactions
         avatar_template = user&.avatar_template.to_s
         avatar_url = avatar_template.gsub("{size}", "72")
 
+        username = user&.username || "anonymous"
+        name = user&.name.presence || username
+
         {
           id: post.id,
           post_number: post.post_number,
           user: {
             id: user&.id,
-            username: user&.username,
-            name: user&.name.presence || user&.username,
+            username: username,
+            name: name,
             avatar_template: avatar_template,
             avatar_url: avatar_url,
           },

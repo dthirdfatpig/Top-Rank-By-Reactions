@@ -7,17 +7,47 @@ import icon from "discourse/helpers/d-icon";
 import DiscourseURL from "discourse/lib/url";
 import { i18n } from "discourse-i18n";
 
+function getAvatarUrl(template) {
+  if (!template) {
+    return "";
+  }
+  return template.replace("{size}", "72");
+}
+
+function getPostUrl(topic, postNumber) {
+  const baseUrl = topic?.url || window.location.pathname;
+  return `${baseUrl.replace(/\/$/, "")}/${postNumber}`;
+}
+
+function getJumpTitle(postNumber) {
+  try {
+    return i18n("top_rank_by_reactions.jump_to_post", {
+      post_number: postNumber,
+    });
+  } catch (_) {
+    return `Jump to reply #${postNumber}`;
+  }
+}
+
+function renderCooked(cooked) {
+  return htmlSafe(cooked || "");
+}
+
 export default class TopRankFeaturedReplies extends Component {
+  get topic() {
+    return this.args.post?.topic;
+  }
+
   get topPosts() {
     return (
       this.args.post?.top_ranked_posts ||
-      this.args.post?.topic?.top_ranked_posts ||
+      this.topic?.top_ranked_posts ||
       []
     );
   }
 
   get hasPosts() {
-    return this.topPosts.length > 0;
+    return Boolean(this.topPosts && this.topPosts.length > 0);
   }
 
   get sectionTitle() {
@@ -38,35 +68,6 @@ export default class TopRankFeaturedReplies extends Component {
     return count === 1 ? "1 reply" : `${count} replies`;
   }
 
-  get topicUrl() {
-    return this.args.post?.topic?.url || window.location.pathname;
-  }
-
-  postUrl(postNumber) {
-    return `${this.topicUrl}/${postNumber}`;
-  }
-
-  avatarUrl(template) {
-    if (!template) {
-      return "";
-    }
-    return template.replace("{size}", "72");
-  }
-
-  renderHtml(cooked) {
-    return htmlSafe(cooked || "");
-  }
-
-  jumpTitle(postNumber) {
-    try {
-      return i18n("top_rank_by_reactions.jump_to_post", {
-        post_number: postNumber,
-      });
-    } catch (_) {
-      return `Jump to reply #${postNumber}`;
-    }
-  }
-
   @action
   jumpToPost(postNumber, event) {
     if (event) {
@@ -81,7 +82,7 @@ export default class TopRankFeaturedReplies extends Component {
         postElement.classList.remove("highlighted");
       }, 2500);
     } else {
-      const url = this.postUrl(postNumber);
+      const url = getPostUrl(this.topic, postNumber);
       if (DiscourseURL?.routeTo) {
         DiscourseURL.routeTo(url);
       } else {
@@ -115,7 +116,7 @@ export default class TopRankFeaturedReplies extends Component {
                     data-user-card={{item.user.username}}
                   >
                     <img
-                      src={{this.avatarUrl item.user.avatar_template}}
+                      src={{getAvatarUrl item.user.avatar_template}}
                       class="avatar top-rank-avatar"
                       alt={{item.user.username}}
                       width="36"
@@ -129,7 +130,11 @@ export default class TopRankFeaturedReplies extends Component {
                       class="top-rank-author-name"
                       data-user-card={{item.user.username}}
                     >
-                      {{item.user.name}}
+                      {{#if item.user.name}}
+                        {{item.user.name}}
+                      {{else}}
+                        {{item.user.username}}
+                      {{/if}}
                     </a>
                     <span class="top-rank-author-username">@{{item.user.username}}</span>
                   </div>
@@ -152,9 +157,9 @@ export default class TopRankFeaturedReplies extends Component {
                   {{/if}}
 
                   <a
-                    href={{this.postUrl item.post_number}}
+                    href={{getPostUrl this.topic item.post_number}}
                     class="top-rank-jump-btn"
-                    title={{this.jumpTitle item.post_number}}
+                    title={{getJumpTitle item.post_number}}
                     {{on "click" (fn this.jumpToPost item.post_number)}}
                   >
                     <span>Reply #{{item.post_number}}</span>
@@ -164,7 +169,7 @@ export default class TopRankFeaturedReplies extends Component {
               </header>
 
               <div class="top-rank-card-cooked cooked">
-                {{{this.renderHtml item.cooked}}}
+                {{renderCooked item.cooked}}
               </div>
             </article>
           {{/each}}
