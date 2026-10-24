@@ -2,6 +2,13 @@
 
 All notable changes to the **Top-Rank-By-Reactions** Discourse plugin will be documented in this file.
 
+## [0.0.8] - 2026-10-24
+
+### Fixed
+- **Clean Discourse Serializer Deprecations**: Migrated all `add_to_serializer` calls to the modern `include_condition: -> { ... }` keyword argument, removing deprecated positional arguments and manual `include_*?` method overrides. Completely eliminates serializer deprecation logs in `/logs`.
+
+---
+
 ## [0.0.7] - 2026-10-18
 
 ### Security & Hardening
