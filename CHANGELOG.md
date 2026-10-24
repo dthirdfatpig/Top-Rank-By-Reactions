@@ -2,6 +2,14 @@
 
 All notable changes to the **Top-Rank-By-Reactions** Discourse plugin will be documented in this file.
 
+## [0.0.9] - 2026-10-24
+
+### Changed
+- **Author Attribution**: Updated plugin author in `plugin.rb` header metadata to `dthirdfatpig`, accurately displaying "By dthirdfatpig" in the Discourse Admin plugins directory (`/admin/plugins`).
+- **Plugin Metadata & Repository Linking**: Confirmed plugin URL (`https://github.com/dthirdfatpig/Top-Rank-By-Reactions`) and description in `plugin.rb` so Discourse Admin directs administrators to this GitHub repository.
+
+---
+
 ## [0.0.8] - 2026-10-24
 
 ### Fixed

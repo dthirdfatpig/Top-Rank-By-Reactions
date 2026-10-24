@@ -1,8 +1,8 @@
 # frozen_string_literal: true
 # name: Top-Rank-By-Reactions
 # about: Features the most reacted posts under the original post while preserving natural chronological timeline in Discourse topics.
-# version: 0.0.8
-# authors: Discourse Team
+# version: 0.0.9
+# authors: dthirdfatpig
 # url: https://github.com/dthirdfatpig/Top-Rank-By-Reactions
 # required_version: 2.7.0
 
